@@ -15,13 +15,20 @@ const courseSchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: ['web', 'mobile', 'network'],
+    lowercase: true,
+    // uppercase: true,
+    trim: true,
   },
   author: String,
   tags: {
     type: Array,
     validate: {
-      validator: function (v) {
-        return v === null || v.length > 0;
+      isAsync: true,
+      validator: function (v, callback) {
+        setTimeout(() => {
+          const result = v === null || v.length > 0;
+          callback(result);
+        }, 4000);
       },
       message: 'A course should have atleast one tag.',
     },
@@ -35,6 +42,8 @@ const courseSchema = new mongoose.Schema({
     },
     min: 10,
     max: 200,
+    get: (v) => Math.round(v),
+    set: (v) => Math.round(v),
   },
 });
 
@@ -45,11 +54,11 @@ async function createCourse() {
 
   const course = new Course({
     name: 'Angular course',
-    category: 'web',
+    category: ' Web',
     author: 'Mosh',
-    tags: [],
+    tags: ['frontend'],
     isPublished: true,
-    price: 15,
+    price: 15.8,
   });
 
   try {
@@ -57,7 +66,9 @@ async function createCourse() {
     // const result = await course.validate();
     console.log(result);
   } catch (ex) {
-    console.log(ex.message);
+    for (field in ex.errors) {
+      console.log(ex.errors[field].message);
+    }
   }
 }
 
@@ -78,13 +89,13 @@ async function getCourses() {
     //    .find({ author: /Hamedani^/i })
 
     // contains mosh
-    .find({ author: /.*Mosh.*/ })
-    .skip((pageNumber - 1) * pageSize)
-    .limit(pageSize)
+    .find({ _id: '5ee39484eb99c42809e0ce6f' })
+    // .skip((pageNumber - 1) * pageSize)
+    // .limit(pageSize)
     .sort({ name: -1 })
-    .select({ name: 1, tags: 1 });
+    .select({ name: 1, tags: 1, price: 1 });
   // .count();
-  console.log(courses);
+  console.log(courses[0].price);
 }
 
 async function updateCourse(id) {
@@ -131,8 +142,8 @@ async function removeCourse(id) {
   console.log(course);
 }
 
-createCourse();
+// createCourse();
 // removeCourse('5ee22c862a3e07770eee05bb');
 //updateCourse('5ee218a10c6943582d28cc3e');
 
-// getCourses();
+getCourses();
